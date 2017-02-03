@@ -1,0 +1,23 @@
+{
+  "name": "webpack2",
+  "version": "1.0.0",
+  "description": "Webpack 2 playground",
+  "main": "index.js",
+  "author": "James White",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && webpack"
+  },
+  "devDependencies": {
+    "css-loader": "^0.26.1",
+    "extract-text-webpack-plugin": "^2.0.0-beta",
+    "html-webpack-plugin": "^2.28.0",
+    "rimraf": "^2.5.4",
+    "style-loader": "^0.13.1",
+    "webpack": "^2.2.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4"
+  }
+}
