@@ -1,38 +1,36 @@
 const path = require('path');
 const webpack = require('webpack');
+const merge = require('webpack-merge');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 const PATHS = {
   app: path.resolve(__dirname, 'app'),
   dist: path.resolve(__dirname, 'dist'),
-}
+};
 
-module.exports = {
-
+const baseCfg = {
   entry: {
     app: PATHS.app,
-    // vendor: [
-    //   path.resolve(PATHS.app, 'vendors.js'),
-    //   'lodash',
-    // ],
   },
   
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: PATHS.dist,
     filename: '[name].js',
   },
 
   module: {
     rules: [
       {
-        test: /\.css$/,
-         //use: ['style-loader', 'css-loader'],
-        use: ExtractTextPlugin.extract({
-          fallbackLoader: "style-loader",
-          loader: "css-loader"
-        }),
-      }
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+        options: { 
+          presets: [ 
+            'es2015' 
+          ] 
+        }
+      },
     ]
   },
 
@@ -50,13 +48,80 @@ module.exports = {
     }),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'common',
-      minChunks: 2,
-    }),
-
-    new ExtractTextPlugin({
-      filename: '[name].css',
-      allChunks: true,
+      minChunks: Infinity,
     }),
   ],
+};
 
+const devCfg = {
+  devtool: 'eval',
+
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      }
+    ],
+  },
+  plugins: [
+    new webpack.NamedModulesPlugin(),
+  ],  
+};
+
+const prodCfg = {
+  output: {
+    filename: '[name].[chunkhash].js',
+  },
+
+  //devtool: 'source-map',
+
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ExtractTextPlugin.extract({
+          fallbackLoader: "style-loader",
+          loader: "css-loader"
+        }),
+      }
+    ],
+  },
+  plugins: [
+    new ExtractTextPlugin({
+      filename: '[name].[contenthash].css',
+      allChunks: true,
+    }),
+    new webpack.HashedModuleIdsPlugin(),
+    new webpack.LoaderOptionsPlugin({
+      minimize: true,
+      debug: false
+    }),
+
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false,
+      },
+      output: {
+        comments: false,
+      },
+      sourceMap: true,
+    }),
+
+    new webpack.SourceMapDevToolPlugin({
+        filename: '[file].map',
+        include: 'app',
+    }),
+
+  ],
+};
+
+module.exports = function(env) {
+  let envCfg = {};
+  if (env === 'dev') {
+    envCfg = devCfg;
+  } else if (env === 'prod') {
+    envCfg = prodCfg;
+  }
+  return merge(baseCfg, envCfg);
 };
